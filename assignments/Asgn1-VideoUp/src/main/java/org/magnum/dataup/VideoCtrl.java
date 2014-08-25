@@ -11,9 +11,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.magnum.dataup.model.Video;
 import org.magnum.dataup.model.VideoStatus;
 import org.magnum.dataup.model.VideoStatus.VideoState;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,24 +27,28 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.google.common.net.MediaType;
-
 @Controller
 public class VideoCtrl {
 
 	private static final AtomicLong currentId = new AtomicLong(0L);
+	// Map for storing video binary data
 	private final Map<Long, InputStream> videoStore = new HashMap<Long, InputStream>();
+	// Map for storing video meta data  
 	private final Map<Long, Video> videos = new HashMap<Long, Video>();
 
+	/**
+	 * @return list with all the video meta data
+	 */
 	@RequestMapping(value = "/video", method = RequestMethod.GET)
 	public @ResponseBody List<Video> getVideos() {
-		// Video video = Video.create().withContentType("video/mpeg")
-		// .withDuration(123).withSubject("Mobile Cloud")
-		// .withTitle("Programming Cloud Services for ...").build();
-		// videosMap.put(1L, video);
 		return new ArrayList<Video>(videos.values());
 	}
 
+	/**
+	 * Adds video meta data passed as parameter
+	 * @param video
+	 * @return video with new assigned unique id
+	 */
 	@RequestMapping(value = "/video", method = RequestMethod.POST)
 	public @ResponseBody Video addVideo(@RequestBody Video video) {
 		// Add video only if it is not already being added
@@ -61,6 +67,13 @@ public class VideoCtrl {
 		return video;
 	}
 
+	/**
+	 * Adds the video binary data corresponding to the video id passed as parameter
+	 * @param id
+	 * @param videoData
+	 * @param response with error code if any problem arises
+	 * @return video status with READY status if all is ok
+	 */
 	@RequestMapping(value = "/video/{id}/data", method = RequestMethod.POST)
 	public @ResponseBody VideoStatus setVideoData(@PathVariable("id") long id,
 			@RequestParam("data") MultipartFile videoData,
@@ -82,34 +95,27 @@ public class VideoCtrl {
 		return status;
 	}
 	
-//	@RequestMapping(value="/video/{id}/data", method = RequestMethod.GET)
-//	public @ResponseBody InputStream getData(@PathVariable("id") long id, HttpServletResponse response){
-//		InputStream in = null;
-//		try {
-//			if(!videos.containsKey(id) || !videoStore.containsKey(id)){
-//				response.sendError(HttpServletResponse.SC_NOT_FOUND, "Video not existing");
-//			}else{
-//				in = videoStore.get(id);
-//			}
-//		} catch (IOException io) {
-//			System.out.println("Internal error");
-//		}
-//		
-//		return in;
-//	}
-
-//	@RequestMapping(value="/video/{id}/data", method = RequestMethod.GET)
-//	public @ResponseBody byte[] getData(@PathVariable("id") long id, HttpServletResponse response){
-//		try {
-//			if(!videos.containsKey(id) || !videoStore.containsKey(id)){
-//				response.sendError(HttpServletResponse.SC_NOT_FOUND, "Video not existing");
-//			}else{
-//				response.getOutputStream().write(videoStore.get(id));
-//			}
-//		} catch (IOException io) {
-//			System.out.println("Internal error");
-//		}
-//	}
+	
+	/**
+	 * Gets the binary data corresponding to the video id passed as parameter.
+	 * @param id
+	 * @param response with the data copied from stored video InputStream
+	 */
+	@RequestMapping(value="/video/{id}/data", method = RequestMethod.GET)
+	public @ResponseBody void getData(@PathVariable("id") long id, HttpServletResponse response){
+		InputStream in = null;
+		
+		try {
+			if(!videos.containsKey(id) || !videoStore.containsKey(id)){
+				response.sendError(HttpServletResponse.SC_NOT_FOUND, "Video not existing");
+			}else{
+				in = videoStore.get(id);
+				IOUtils.copy(in,response.getOutputStream());
+			}
+		} catch (IOException io) {
+			System.out.println("Internal error");
+		}		
+	}
 	
 //	@Bean
 //	public MultipartConfigElement getMultipartConfig() {
