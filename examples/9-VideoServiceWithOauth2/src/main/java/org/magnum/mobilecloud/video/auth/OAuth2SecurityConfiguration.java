@@ -108,7 +108,6 @@ public class OAuth2SecurityConfiguration {
 				.antMatchers("/**")
 				.access("#oauth2.hasScope('write')");
 		}
-
 	}
 
 	/**
