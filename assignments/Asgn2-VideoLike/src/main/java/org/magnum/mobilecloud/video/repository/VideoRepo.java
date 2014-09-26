@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface VideoRepo extends CrudRepository<Video, Long> {
 	
-	public Collection findByName(String name);
+	public Collection<Video> findByName(String name);
 	
+	public Collection<Video> findByDurationLessThan(long duration);
 }

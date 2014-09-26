@@ -1,10 +1,10 @@
 package org.magnum.mobilecloud.video.repository;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -36,6 +36,7 @@ public class Video {
 	private String url;
 	private long duration;
 	private long likes;
+	@ElementCollection
 	@CollectionTable(name="likers")
 	private Set<String> likers = new HashSet<String>();
 	
@@ -107,7 +108,7 @@ public class Video {
 		likers = likersSet;
 	}
 	
-	private void incrLikes() {
+	public void incrLikes() {
 		likes++;	
 	}
 	

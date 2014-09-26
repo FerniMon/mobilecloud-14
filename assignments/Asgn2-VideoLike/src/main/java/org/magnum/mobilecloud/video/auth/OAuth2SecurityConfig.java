@@ -5,6 +5,8 @@ import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -15,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.config.annotation.builders.InMemoryClientDetailsServiceBuilder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
@@ -25,7 +28,6 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
  * Class with the purpose of configuring all the needed structures for OAuth2
  * security.
  * 
- * @author Fernando Monferrer
  *
  */
 @Configuration
@@ -51,9 +53,11 @@ public class OAuth2SecurityConfig {
 	 * This class serves as configurator of the OAuth2 authorizaton server
 	 * according to our needs
 	 * 
-	 * @author Fernando Monferrer
 	 *
 	 */
+	@Configuration
+	@EnableAuthorizationServer
+	@Order(Ordered.LOWEST_PRECEDENCE - 100)
 	protected static class OAuth2AuthSrvrConfig extends
 			AuthorizationServerConfigurerAdapter {
 
@@ -138,6 +142,7 @@ public class OAuth2SecurityConfig {
 				.access("#oauth2.hasScope('read')");
 			
 			// Require all other requests to have "write" scope
+			
 			http
 			.authorizeRequests()
 				.antMatchers("/**")

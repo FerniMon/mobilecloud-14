@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.google.common.collect.Lists;
@@ -42,8 +43,8 @@ public class VideoCtrl {
 	}
 
 	// Processes GET requests to /video/{id} and returns the added video updated
-	// with persited object id
-	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH, method = RequestMethod.GET)
+	// with persisted object id
+	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH +"/{id}", method = RequestMethod.GET)
 	public @ResponseBody Video getVideo(@PathVariable("id") long id,
 			HttpServletResponse response) {
 		Video video = null;
@@ -63,7 +64,7 @@ public class VideoCtrl {
 		return video;
 	}
 
-	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH + "{id}" + "like", method = RequestMethod.POST)
+	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH + "/{id}" + "/like", method = RequestMethod.POST)
 	public void likeVideo(@PathVariable("id") long id,
 			HttpServletResponse response, Authentication authentication) {
 		try {
@@ -77,6 +78,7 @@ public class VideoCtrl {
 					response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Video already liked by the user");
 				}else{
 					video.addLiker(user.getUsername());
+					video.incrLikes();
 					videoRepo.save(video);
 				}
 			}
@@ -85,7 +87,7 @@ public class VideoCtrl {
 		}
 	}
 	
-	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH + "{id}" + "unlike", method = RequestMethod.POST)
+	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH + "/{id}" + "/unlike", method = RequestMethod.POST)
 	public void unlikeVideo(@PathVariable("id") long id, HttpServletResponse response, Authentication authentication) {
 		try {
 			if (!videoRepo.exists(id)) {
@@ -106,7 +108,7 @@ public class VideoCtrl {
 		}
 	}
 	
-	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH + "{id}" + "likedBy", method = RequestMethod.POST)
+	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH + "/{id}" + "/likedby", method = RequestMethod.GET)
 	public @ResponseBody Collection<String> getLikedBy(@PathVariable("id") long id, HttpServletResponse response){
 		Set<String> likers = null;
 		try {
@@ -124,5 +126,13 @@ public class VideoCtrl {
 		return likers;
 	}
 	
-
+	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH +"/search/findByName", method = RequestMethod.GET)
+	public @ResponseBody Collection<Video> findByName(@RequestParam("title") String title){
+		return videoRepo.findByName(title);
+	}
+	
+	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH +"/search/findByDurationLessThan", method = RequestMethod.GET)
+	public @ResponseBody Collection<Video> findByDurationLessThan(@RequestParam("duration") String duration){
+		return videoRepo.findByDurationLessThan(Long.parseLong(duration));
+	}
 }
